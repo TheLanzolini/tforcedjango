@@ -16,7 +16,7 @@ from social.backends.twitter import TwitterOAuth
 from social.backends.reddit import RedditOAuth2
 from social.backends.utils import load_backends
 from social.apps.django_app.utils import psa
-
+from app.models import Show
 from app.decorators import render_to
 
 from django.template import RequestContext
@@ -123,3 +123,29 @@ def about(request):
                 'year':datetime.now().year,
             })
     )
+
+def filter(request):
+    response_data={}
+    if request.method != 'POST':
+        response_data['result']='failure'
+        return
+
+    filterOn = request.POST.get('categoryToFilter')
+    key = request.POST.get('dbKey')
+    response_data['categoryToFilter']= filterOn
+    if filterOn == "show":
+        result=Show.owner.objects.filter(channel=key)[0]
+        response_data['title']=result.title
+        response_data['description']=result.description
+
+    if filterOn == "title":
+        result=Show.objects.filter(title=key)[0]
+        response_data['title']=result.title
+        response_data['output']=[{'description' : result.description}]
+
+    response_data['result']='success'
+    return HttpResponse(
+            json.dumps(response_data),
+            content_type="application/json"
+        )
+
