@@ -1,4 +1,4 @@
-front.jsvar tfn = window.tfn || {};
+var tfn = window.tfn || {};
 
 jQuery(function($){
   tfn.wrapper = $("#tfn-app .partial");

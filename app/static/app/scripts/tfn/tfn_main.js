@@ -1,5 +1,3 @@
-var tfn = window.tfn || {};
-
 jQuery(function($){
 
   // On click event for fourwards podcast #proof of concept
