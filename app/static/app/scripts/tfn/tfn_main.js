@@ -3,7 +3,8 @@ var tfn = window.tfn || {};
 jQuery(function($){
   tfn.wrapper = $("#tfn-app .partial");
   tfn.partial = tfn.wrapper.attr("data-partial");
-  tfn.home_category = tfn.home_category || "all";
+  tfn.selected_show = "featured";
+  tfn.home_category = tfn.home_category || "league";
   //router
   switch(tfn.partial){
     case "home":
@@ -27,9 +28,12 @@ jQuery(function($){
     }else{
       header_dropdown.addClass('expanded');
     }
-          
   });
-  
+
+  $('.dropdown-content .dropdown-channel').click(function(){
+    tfn.selected_show = $(this).attr('data-channel');
+    console.log(tfn.selected_show);
+  });
 });
 
 tfn.home = function(){
@@ -87,54 +91,50 @@ tfn.home = function(){
   ];
   var post_card = tfn.wrapper.find('.main__posts .post.template').clone();
   var body = tfn.wrapper.find('.main__posts');
-  body.find('.post.cloned').remove();
-  var target_posts;
-  if(tfn.home_category == "all"){
-    target_posts = fake_proper_posts;
-  }
-  
+  var post_sections = body.find('post-section');
+
   switch(tfn.home_category){
-    case "all":
-      target_posts = fake_proper_posts.concat(fake_rundown_posts);
-      fill_in_posts(target_posts);
+    case "league":
+      fillLeague();
       break;
-    case "home":
-      target_posts = fake_proper_posts.concat(fake_rundown_posts);
-      fill_in_posts(target_posts);
-      break;
-    case "rundown":
-      target_posts = fake_rundown_posts;
-      fill_in_posts(target_posts);
-      break;
-    case "proper":
-      target_posts = fake_proper_posts;
-      fill_in_posts(target_posts);
-      break;
-    default:
-      body.append("<span class=\"post cloned\">No posts are available for this category.</span>");
   }
-  
-  function fill_in_posts(target_posts){
-    for(var i=0;i<target_posts.length;i++){
-      var post = target_posts[i];
-      var temp_card = post_card.clone().removeClass("template").addClass("cloned");
-      temp_card.find('.post-title').html(post.title);
-      temp_card.find('.post-content').html(post.content);
-      temp_card.find('.post-show').html(post.show);
-      var hosts_string = "Hosted by:";
-      for(var j=0;j<post.hosts.length;j++){
-        hosts_string = hosts_string + " " + post.hosts[j];
-      }
-      temp_card.find('.hosted-by').html(hosts_string);
-      temp_card.find('.post-content').html(post.content);
-      var tags_string = "Tags:";
-      for(var k=0;k<post.tags.length;k++){
-        tags_string = tags_string + " <a href=\"#\">" + post.tags[k] + "</a>";
-      }
-      temp_card.find('.post-tags').html(tags_string);
-      body.append(temp_card);
+
+  function fillLeague(){
+    switch(tfn.selected_show){
+      case "featured":
+        // tfn.queriedPosts = 
+        fillPosts(fake_proper_posts.concat(fake_rundown_posts));
+        break;
+      case "proper":
+        fillPosts("proper");
+        break;
     }
   }
+
+  function fillPosts(posts){
+    console.log(posts);
+    var num_posts = posts.length;
+    var num_sections = Math.ceil(num_posts/6);
+    console.log(num_sections);
+    var stop = 6;
+    for(var i=0;i<num_sections;i++){
+      var section = $('.post-section.template').clone().addClass('cloned').removeClass('template');
+      var post = section.find('.post.template').clone().addClass('cloned').removeClass('template');
+      console.log(post);
+      for(var j=0;j<6;j++){
+        var p = post.clone();
+        var target_post = posts[j];
+        if(target_post){
+          p.find('.post-title').html(target_post.title);
+          p.find('.post-info .excerpt').html(target_post.content);
+          section.append(p);
+        }
+      }
+      body.append(section);
+    }
+  }
+
+  console.log(tfn);
 }
 
 
