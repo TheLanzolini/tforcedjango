@@ -61,12 +61,13 @@ class EpisodeAdmin(admin.ModelAdmin):
     episode_shows.short_description = "Shows"
 
     def episode_sites(self, obj):
-        sites = list()
+        return "Sites"
+        '''sites = list()
         for show in obj.shows.all():
             for site in show.sites.all():
                 if site not in sites:
                     sites.append(site)
-        return ', '.join([site.name for site in sites])
+        return ', '.join([site.name for site in sites])'''
     episode_sites.short_description = "Sites"
 
     def save_form(self, request, form, change):

@@ -335,12 +335,12 @@ class AdminEpisodeForm(forms.ModelForm):
         self.fields["publish"].initial = bool(self.instance.published)
 
     def validate_published(self):
-        if not self.instance.enclosure_set.count() and not self.instance.embedmedia_set.count():
+        '''if not self.instance.enclosure_set.count() and not self.instance.embedmedia_set.count():
             raise forms.ValidationError(
                 _("An episode must have at least one enclosure or media file before publishing.\n "
                   "Uncheck, save this episode, and add an encoslure before publishing."))
         elif not self.instance.is_show_published:
-            raise forms.ValidationError(_("The show for this episode is not yet published"))
+            raise forms.ValidationError(_("The show for this episode is not yet published"))'''
         self.instance.published = now()
 
     def clean_publish(self):
@@ -355,7 +355,9 @@ class AdminEpisodeForm(forms.ModelForm):
 
     def save(self):
         episode = super(AdminEpisodeForm, self).save(commit=False)
-
+        duration = (episode.hours *3600) + (episode.minutes * 60) + episode.seconds
+        episode.duration = duration #Point left off
+        episode.size = 0 #TODO JF This is a hack we need to determine the size from URL?
         episode.save()
 
         if can_tweet() and self.cleaned_data["tweet"]:
