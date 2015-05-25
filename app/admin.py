@@ -42,7 +42,7 @@ class ShowAdmin(admin.ModelAdmin):
 
 class EpisodeAdmin(admin.ModelAdmin):
     form = AdminEpisodeForm
-    list_display = ["title", "episode_shows", "slug", "episode_sites", "published_flag"]
+    list_display = ["title", "episode_shows", "hosts", "slug", "episode_sites", "published_flag"]
     list_filter = ["shows", "published"]
     if AdminThumbnail:
         list_display.append("admin_thumbnail")
@@ -55,6 +55,10 @@ class EpisodeAdmin(admin.ModelAdmin):
         return bool(obj.published)
     published_flag.short_description = _("Published")
     published_flag.boolean = True
+
+    def hosts(self, obj):
+        return ', '.join([member.user.Username for member in obj.members.all()])
+    hosts.short_description = "Hosts"
 
     def episode_shows(self, obj):
         return ', '.join([show.title for show in obj.shows.all()])

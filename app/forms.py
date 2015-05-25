@@ -87,6 +87,8 @@ class BaseShowForm(forms.ModelForm):
         help_text=_("Checking this will publish this show on the site, no turning back."),
     )
 
+
+
     class Meta:
         model = Show
         fields = [
@@ -317,6 +319,7 @@ class AdminEpisodeForm(forms.ModelForm):
         fields = [
             "shows",
             "original_image",
+            "members",
             "author_text",
             "title", "subtitle",
             "description",
