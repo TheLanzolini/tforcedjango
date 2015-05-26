@@ -199,7 +199,7 @@ class Channel(models.Model):
     members = models.ManyToManyField(Profile, limit_choices_to={"user__is_staff":True}, blank=False, null=True, default=None)
     tags = TaggableManager(blank=True)
     objects = models.Manager()
-    
+
     @property
     def shows(self):
         return self.content_set.exclude(show__exact=None)
@@ -225,6 +225,8 @@ class Channel(models.Model):
     def latest_episode(self):
         return self.episodes.latest("published")
 
+    def name(self):
+        return self.title
 
     def __str__(self):
         return self.title
@@ -240,14 +242,29 @@ class Content(models.Model):
     objects = PassThroughManager.for_queryset_class(mngr.ContentManager)()
     channel = models.ManyToManyField(Channel, null=True, default=None)
 
-    STATUS_CHOICES = ((1, "Draft"), (2, "Published"),)
+    STATUS_CHOICES = ((1, "Draft"), (2, "Published"), (3, "Featured"))
 
     status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, default=1)
 
     def publish(self):
-        self.status = 1
-        self.published = datetime.datetime.now().__str__()
+        if(self.status == 1):
+            self.status = 2
+            self.published = datetime.datetime.now().__str__()
         return self.save()
+
+    def feature(self):
+        self.status = 3
+        return self.save()
+
+    def unfeature(self):
+        self.status = 2
+        return self.save()
+
+    def channel_name(self):
+        if self.channel is not None:
+            return self.channel
+        else:
+            return ""
 
     @property
     def channels(self):
