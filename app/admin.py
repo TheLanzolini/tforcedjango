@@ -42,7 +42,7 @@ class ShowAdmin(admin.ModelAdmin):
 
 class EpisodeAdmin(admin.ModelAdmin):
     form = AdminEpisodeForm
-    list_display = ["title", "episode_shows", "slug", "episode_sites", "published_flag"]
+    list_display = ["title", "episode_shows", "hosts", "slug", "episode_sites", "published_flag"]
     list_filter = ["shows", "published"]
     if AdminThumbnail:
         list_display.append("admin_thumbnail")
@@ -56,17 +56,22 @@ class EpisodeAdmin(admin.ModelAdmin):
     published_flag.short_description = _("Published")
     published_flag.boolean = True
 
+    def hosts(self, obj):
+        return ', '.join([member.user.Username for member in obj.members.all()])
+    hosts.short_description = "Hosts"
+
     def episode_shows(self, obj):
         return ', '.join([show.title for show in obj.shows.all()])
     episode_shows.short_description = "Shows"
 
     def episode_sites(self, obj):
-        sites = list()
+        return "Sites"
+        '''sites = list()
         for show in obj.shows.all():
             for site in show.sites.all():
                 if site not in sites:
                     sites.append(site)
-        return ', '.join([site.name for site in sites])
+        return ', '.join([site.name for site in sites])'''
     episode_sites.short_description = "Sites"
 
     def save_form(self, request, form, change):

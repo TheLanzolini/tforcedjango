@@ -150,6 +150,7 @@
   <ItemGroup>
     <Content Include="app\static\app\images\betasoftware.jpg" />
     <Content Include="app\static\app\images\proper-logo.png" />
+    <Content Include="app\static\app\scripts\tfn\front.js" />
     <Content Include="app\static\app\scripts\tfn\login_by_sean.js" />
     <Content Include="app\static\app\scripts\tfn\tfn_main.js" />
     <Content Include="app\templates\app\auth.html" />

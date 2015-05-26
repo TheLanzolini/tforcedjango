@@ -16,7 +16,7 @@ from social.backends.twitter import TwitterOAuth
 from social.backends.reddit import RedditOAuth2
 from social.backends.utils import load_backends
 from social.apps.django_app.utils import psa
-from app.models import Show
+from app.models import Show, Episode, Channel
 from app.decorators import render_to
 
 from django.template import RequestContext
@@ -42,9 +42,6 @@ def authtest(request, backend):
     if not request.user.is_authenticated():
         return context()
     return redirect('done')
-
-
-
 
 @login_required
 @render_to('authtest.html')
@@ -124,6 +121,19 @@ def about(request):
             })
     )
 
+#this is bad we should just have the names aligned between the back and front end
+def convert_show_name_to_db_format(show_name):
+    if(show_name == "wards"):
+        return "four wards"
+    elif(show_name == "lcs"):
+        return "lcs rundown"
+    elif(show_name == "proper"):
+        return "trinity force podcast"
+    elif(show_name == "ozlol"):
+         return "ozlol"
+    return show_name
+
+
 def filter(request):
     response_data={}
     if request.method != 'POST':
@@ -134,14 +144,28 @@ def filter(request):
     key = request.POST.get('dbKey')
     response_data['categoryToFilter']= filterOn
     if filterOn == "show":
-        result=Show.owner.objects.filter(channel=key)[0]
-        response_data['title']=result.title
-        response_data['description']=result.description
+        result=Show.objects.filter(title__exact=convert_show_name_to_db_format(key))
+        if(len(result) > 0):
+            result=result[0].episodes.all() 
 
     if filterOn == "title":
-        result=Show.objects.filter(title=key)[0]
-        response_data['title']=result.title
-        response_data['output']=[{'description' : result.description}]
+        result=Show.objects.filter(title__exact=convert_show_name_to_db_format(key))
+        if(len(result) > 0):
+            result=result[0].episodes.all() 
+        result=Episode.objects.filter(title=key).episodes.all() 
+
+    if filterOn == "no_filter":
+        result=Episode.objects.all()
+        
+    output_dictionary=[]
+    i = 0
+
+    for contentInstance in list(result):
+        content_type = type(contentInstance)
+        if content_type is Episode:
+            output_dictionary.append(convert_episode_entry_to_dict(contentInstance))
+        i+=1
+    response_data['output']=output_dictionary
 
     response_data['result']='success'
     return HttpResponse(
@@ -149,3 +173,40 @@ def filter(request):
             content_type="application/json"
         )
 
+    '''
+    This is the expected dictionary to return to the client
+    {
+      result['title'] = "This is a Tforce proper podcast episode",
+      result['content'] = "This is the new website and here is the place an excerpt would go to show the general details of this post!",
+      result['show'] = "proper",
+      result['hosts'] = ["pwnophobia", "declawd", "daysuntold", "chirajaeden", "punchinjello"],
+      result['tags'] = ["patch 5.2", "mechanics", "wave manipulation", "mailbag", "top lane", "dyrus"],
+      result['category'] ="podcast",
+      result['video_url'] = "http://youtu.be/8x1oHRd46QM",
+      result['image_url'] = "http://imgur.com/gallery/eRcR1fQ",
+      result['stitcher_url'] = "http://app.stitcher.com/splayer/f/27428/36930238",
+      result['itunes_url'] = "https://itunes.apple.com/us/podcast/trinity-force-podcast-league/id485769640"
+      result['featured'] = True
+      result['date_published'] = "5/19/15"
+    },
+    '''
+def convert_episode_entry_to_dict(episode):
+    result = {}
+    result['title'] = episode.title
+    result['content'] = episode.author_text
+    result['show'] = episode.parents[0].show.title
+    result['hosts'] = ["pwnophobia", "declawd", "daysuntold", "chirajaeden", "punchinjello"]
+    result['tags'] = ["patch 5.2", "mechanics", "wave manipulation", "mailbag", "top lane", "dyrus"]
+    result['category'] ="podcast"
+    result['video_url'] = "video_url"
+    result['image_url'] = "image_url"
+    result['stitcher_url'] = episode.url
+    result['itunes_url'] = episode.url
+    result['featured'] = (episode.status == 3)
+    result['date_published'] = date_time_to_string(episode.published)
+    return result
+
+def date_time_to_string(date_time):
+    if(date_time is None):
+        return ""
+    return str(date_time.month) + "/" + str(date_time.day) + "/" + str(date_time.year)

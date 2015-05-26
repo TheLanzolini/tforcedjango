@@ -1,9 +1,9 @@
 jQuery(function($){
-
   // On click event for fourwards podcast #proof of concept
   $('#filter').on('submit', function (event) {
+      console.log("fourwards clicked")
       event.preventDefault();
-      filterType = "title"
+      filterType = "show"
       showName = "four wards"
       $.ajax({
           url: "filter/", // the endpoint
