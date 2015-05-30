@@ -195,8 +195,8 @@ def convert_episode_entry_to_dict(episode):
     result['title'] = episode.title
     result['content'] = episode.author_text
     result['show'] = episode.parents[0].show.title
-    result['hosts'] = ["pwnophobia", "declawd", "daysuntold", "chirajaeden", "punchinjello"]
-    result['tags'] = ["patch 5.2", "mechanics", "wave manipulation", "mailbag", "top lane", "dyrus"]
+    result['hosts'] = [profile.User.username for profile in episode.members.all()]
+    result['tags'] = [tag.name for tag in episode.tags.all()]
     result['category'] ="podcast"
     result['video_url'] = "video_url"
     result['image_url'] = "image_url"
