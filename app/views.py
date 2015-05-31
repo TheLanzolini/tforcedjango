@@ -16,11 +16,12 @@ from social.backends.twitter import TwitterOAuth
 from social.backends.reddit import RedditOAuth2
 from social.backends.utils import load_backends
 from social.apps.django_app.utils import psa
-from app.models import Show, Episode, Channel
+from app.models import Show, Episode, Channel, Profile, Content
 from app.decorators import render_to
 
 from django.template import RequestContext
 from datetime import datetime
+from taggit.models import Tag
 
 
 def logout(request):
@@ -142,20 +143,27 @@ def filter(request):
 
     filterOn = request.POST.get('categoryToFilter')
     key = request.POST.get('dbKey')
-    response_data['categoryToFilter']= filterOn
+    response_data['category_to_filter']= filterOn
+    response_data['key'] = key
+    response_data['result']='success'
+    result = []
     if filterOn == "show":
-        result=Show.objects.filter(title__exact=convert_show_name_to_db_format(key))
-        if(len(result) > 0):
-            result=result[0].episodes.all() 
-
-    if filterOn == "title":
-        result=Show.objects.filter(title__exact=convert_show_name_to_db_format(key))
-        if(len(result) > 0):
-            result=result[0].episodes.all() 
-        result=Episode.objects.filter(title=key).episodes.all() 
-
-    if filterOn == "no_filter":
-        result=Episode.objects.all()
+        show=Show.objects.filter(title__exact=convert_show_name_to_db_format(key))
+        if(len(show) > 0):
+            result=show[0].episodes.all() 
+    elif filterOn == "title":
+        result = Episode.objects.filter(title__exact=key) 
+    elif filterOn == "host":
+        host=Profile.objects.filter(username__exact=key)
+        if(len(host) > 0):
+            result=host[0].appearences.all()
+    elif filterOn == "tag":
+        result = Content.objects.filter(tags__name__exact=key)
+    elif filterOn == "no_filter":
+        result = Content.objects.all()
+    else: 
+        response_data['result']='failure'
+        response_data['error']= filterOn + ' is not a valid category to filter on'
         
     output_dictionary=[]
     i = 0
@@ -167,7 +175,6 @@ def filter(request):
         i+=1
     response_data['output']=output_dictionary
 
-    response_data['result']='success'
     return HttpResponse(
             json.dumps(response_data),
             content_type="application/json"

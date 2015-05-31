@@ -57,7 +57,7 @@ class EpisodeAdmin(admin.ModelAdmin):
     published_flag.boolean = True
 
     def hosts(self, obj):
-        return ', '.join([member.user.username for member in obj.members.all()])
+        return ', '.join([member.username for member in obj.members.all()])
     hosts.short_description = "Hosts"
 
     def episode_shows(self, obj):

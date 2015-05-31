@@ -130,6 +130,7 @@ class Profile(models.Model):
     userLevel = models.PositiveSmallIntegerField(verbose_name="User Level", choices=USER_LEVEL_CHOICES, default=1, null=True, blank=False)
     firstName = models.CharField(max_length=142, blank=False, null=True)
     lastName = models.CharField(max_length=142, blank=False, null=True)
+    username = models.CharField(max_length=30, blank=False, null=False)
 
     datejoined = models.DateField(verbose_name="Date Joined", auto_now_add=True, editable=False)
     birthday = models.DateField(verbose_name="Birthday", null=True, blank=True)
@@ -164,13 +165,6 @@ class Profile(models.Model):
     def is_active(self):
         return self.user.is_active and not self.placeheld
 
-    @property
-    def username(self):
-        if not self.placeheld and self.user:
-            return self.user.username
-        elif self.placeheld:
-            return self.placeholderName
-
     @classmethod
     def create(cls, username):
         profile = cls(user=User.objects.get_by_natural_key(username))
@@ -178,6 +172,7 @@ class Profile(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.placeheld:
+            self.username = self.user.username
             if self.is_staff:
                 #make a few fields required.
                 self.clean_fields([self.placeheld, self.placeholderName])
@@ -186,6 +181,7 @@ class Profile(models.Model):
                 self.clean_fields([self.bio, self.placeheld, self.placeholderName])
                 super(Profile, self).save(*args, **kwargs)
         else:
+            self.username = self.user.placeholderName
             self.clean_fields([self.bio])
 
     def __str__(self):
@@ -198,7 +194,7 @@ class Channel(models.Model):
 
     title = models.CharField(max_length=150, unique=True, null=False, blank=False)
     members = models.ManyToManyField(Profile, limit_choices_to={"user__is_staff":True}, blank=False, null=True, default=None)
-    tags = TaggableManager(blank=True)
+    tags = TaggableManager()
     objects = models.Manager()
 
     @property
@@ -236,7 +232,8 @@ class Channel(models.Model):
 class Content(models.Model):
     from model_utils import managers as mum
     title = models.CharField(max_length=255, unique=True, null=False, blank=False)
-    members = models.ManyToManyField(Profile, limit_choices_to={"user__is_staff":True}, null=True, default=None)
+    tags = TaggableManager()
+    members = models.ManyToManyField(Profile, limit_choices_to={"user__is_staff":True}, null=True, default=None, related_name=_("appearences"))
     created = models.DateTimeField(_("created"), auto_now_add=True, editable=False)
     updated = models.DateTimeField(_("updated"), auto_now=True, editable=False)
     published = models.DateTimeField(_("published"), null=True, blank=True, editable=False)
@@ -434,7 +431,6 @@ class Show(Content):
         blank=True)
 
     objects = PassThroughManager.for_queryset_class(mngr.ShowManager)()
-    tags = TaggableManager(blank = True)
 
     class Meta:
         verbose_name = _("Show")
@@ -466,7 +462,6 @@ class Show(Content):
 class Episode(Content):
     shows = models.ManyToManyField(Show, related_name=_("episodes"))
     objects = PassThroughManager.for_queryset_class(mngr.EpisodeManager)()
-    tags = TaggableManager(blank = True)
     SIXTY_CHOICES = tuple((x, x) for x in range(60))
     
     enable_comments = models.BooleanField(default=True)
@@ -691,7 +686,6 @@ class Blog(Content):
 class Post(Content):
     blog = models.ManyToManyField(Blog, related_name="posts", null=False, blank=False)
     author = models.ForeignKey(Profile, related_name="author", limit_choices_to={'user__is_staff':True})
-    tags = TaggableManager(blank = True)
     slug = AutoSlugField(populate_from="title", unique=True)
     
     def save(self):
@@ -745,7 +739,6 @@ class Event(Content):
     
     start_date = models.DateTimeField(blank=False)
     end_date = models.DateTimeField(blank=False)
-    tags = TaggableManager(blank = True)
 
     @property
     def parent(self):
