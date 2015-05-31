@@ -14,7 +14,7 @@ from app.utils.twitter import can_tweet
 
 class ProfileAdmin(admin.ModelAdmin):
     form = ProfileForm
-    #list_display = ['username', 'fullname', 'userLevel', 'birthday', 'avatar', 'city', 'bio']
+    list_display = ['user', 'fullname']
     list_filter = ['datejoined', 'user__username']
 
 
@@ -57,7 +57,7 @@ class EpisodeAdmin(admin.ModelAdmin):
     published_flag.boolean = True
 
     def hosts(self, obj):
-        return ', '.join([member.user.Username for member in obj.members.all()])
+        return ', '.join([member.user.username for member in obj.members.all()])
     hosts.short_description = "Hosts"
 
     def episode_shows(self, obj):

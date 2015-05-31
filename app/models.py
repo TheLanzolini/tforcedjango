@@ -145,7 +145,7 @@ class Profile(models.Model):
     bio = models.TextField(blank = False, null=True)
 
     @property
-    def last_appeared_on(self): 
+    def last_appeared_on(self):     
         return Content.objects.exclude(published=None).filter(members__contains=self).orderby("-published").first()
 
     @property
@@ -154,6 +154,7 @@ class Profile(models.Model):
             return self.firstName + " " + self.lastName 
         else:
             return self.placeholderName
+        return ""
 
     @property
     def is_staff(self):
@@ -179,13 +180,13 @@ class Profile(models.Model):
         if not self.placeheld:
             if self.is_staff:
                 #make a few fields required.
-                self.clean_fields([placeheld, placeholderName])
+                self.clean_fields([self.placeheld, self.placeholderName])
                 super(Profile, self).save(*args, **kwargs)
             else:
-                self.clean_fields([bio, last_appeared, placeheld, placeholderName])
+                self.clean_fields([self.bio, self.placeheld, self.placeholderName])
                 super(Profile, self).save(*args, **kwargs)
         else:
-            self.clean_fields([bio, last_appeared])
+            self.clean_fields([self.bio])
 
     def __str__(self):
         if not self.placeheld:
@@ -567,6 +568,14 @@ class Episode(Content):
             ("flac", "audio/flac"),
             ("wav", "audio/wav"),
         )
+
+    youtube_url = models.URLField(
+        _("youtube_url"),
+        help_text=_("""The url of the youtube Vod of the show"""))
+
+    image_url = models.URLField(
+        _("image_url"),
+        help_text=_("""The url to display on the website with the episode"""))
 
     url = models.URLField(
         _("url"),

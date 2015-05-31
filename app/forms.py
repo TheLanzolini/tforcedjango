@@ -22,14 +22,12 @@ from django.contrib.auth.models import User
 
 class ProfileForm(forms.ModelForm):
     
-    username = forms.CharField(help_text="", widget=forms.TextInput({ 'disabled': 'disabled' }))
-    
     def __init__(self, *args, **kwargs):
         super(ProfileForm, self).__init__(*args, **kwargs)
         if self.instance.pk and self.instance.user:
-            self.fields['username'].initial = self.instance.username
+            self.fields['user'].initial = self.instance.username
         else:
-            self.fields['username'] = forms.ModelChoiceField(queryset=User.objects.filter(profile=None))
+            self.fields['user'] = forms.ModelChoiceField(queryset=User.objects.filter(profile=None))
         if self.instance.pk and not self.instance.user:
             self.fields['placeheld'].required = True
             self.fields['placeheld'].initial = True
@@ -39,7 +37,8 @@ class ProfileForm(forms.ModelForm):
     #fullname = forms.C
     class Meta:
         model = Profile
-        fields = ['userLevel', 
+        fields = [ 'user',
+                  'userLevel', 
                   'firstName', 
                   'lastName', 
                   'birthday',
@@ -52,17 +51,15 @@ class ProfileForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super(ProfileForm, self).clean()
-        user = cleaned_data.get("username")
+        user = cleaned_data.get("user")
         placeheld = cleaned_data.get("placeheld")
         pName = cleaned_data.get("placeholderName")
         if not user:
             if not placeheld:
-                self.add_error(ValidationError(_('Select a username or mark the Placeheld field as true.'), code='invalid'))
+                self.add_error(ValidationError(_('Select a username or mark the Placeheld field as true.'), code='invalid'), params = None)
             pass
         pass
-
-
-            
+        return cleaned_data         
 
 
 class BootstrapAuthenticationForm(AuthenticationForm):
@@ -93,7 +90,7 @@ class BaseShowForm(forms.ModelForm):
         model = Show
         fields = [
             "original_image",
-            #"author_text",
+            "author_text",
             "owner",
             "editor_email",
             "webmaster_email",
@@ -159,6 +156,8 @@ class BaseEpisodeForm(forms.ModelForm):
             "description",
             "tracklist",
             "url",
+            "youtube_url",
+            "image_url",
             "hours", "minutes", "seconds",
             "publish",
             "url",
