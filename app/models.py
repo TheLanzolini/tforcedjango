@@ -702,7 +702,18 @@ class Post(Content):
     pass
 #End post
 
+class Photo(models.Model):
+    published = models.DateTimeField(_("published"), null=True, blank=True, editable=False)
+    link = models.URLField()
+    caption = models.CharField(
+        _("caption"), max_length=255, help_text=_("""
+            This will be displayed to the user directly below the photo."""))
+    x_dimension = models.PositiveIntegerField()
+    y_dimension = models.PositiveIntegerField()
 
+class PhotoGallery(Content):
+    submiter = models.ForeignKey(Profile, related_name="submiter", limit_choices_to={'user__is_staff':True})
+    pictures = models.ManyToManyField(Photo, blank=False, null=True, default=None)
 
 class Feed(models.Model):
     ''' This is a custom feed that is created and saved for a given user. 

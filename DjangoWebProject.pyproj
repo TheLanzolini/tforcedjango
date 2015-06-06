@@ -156,7 +156,6 @@
     <Content Include="app\templates\app\auth.html" />
     <Content Include="app\templates\app\login - Copy.html" />
     <Content Include="app\templates\app\profile.html" />
-    <Content Include="db.sqlite3" />
     <Content Include="django-ajax\.gitignore" />
     <Content Include="django-ajax\.git\config" />
     <Content Include="django-ajax\.git\description" />

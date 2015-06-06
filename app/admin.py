@@ -1,6 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from django.contrib import admin
+from app.forms import PhotoForm, PhotoGalleryForm
 
 try:
     from imagekit.admin import AdminThumbnail
@@ -17,7 +18,15 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'fullname']
     list_filter = ['datejoined', 'user__username']
 
+class PhotoAdmin(admin.ModelAdmin):
+    form = PhotoForm
+    list_display = ["caption", "published"]
+    list_display = ["published"]
 
+class PhotoGalleryAdmin(admin.ModelAdmin):
+    form = PhotoGalleryForm
+    list_display = ["title", "published"]
+    list_filter = ["title", "published"]
 
 class ShowAdmin(admin.ModelAdmin):
     form = AdminShowForm
@@ -83,3 +92,5 @@ class EpisodeAdmin(admin.ModelAdmin):
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Show, ShowAdmin)
 admin.site.register(Episode, EpisodeAdmin)
+admin.site.register(PhotoGallery, PhotoGalleryAdmin)
+admin.site.register(Photo, PhotoAdmin)

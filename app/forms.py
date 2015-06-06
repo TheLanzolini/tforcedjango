@@ -8,6 +8,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from app.models import PhotoGallery, Photo
 
 try:
     from django.utils.timezone import now
@@ -83,8 +84,6 @@ class BaseShowForm(forms.ModelForm):
         required=False,
         help_text=_("Checking this will publish this show on the site, no turning back."),
     )
-
-
 
     class Meta:
         model = Show
@@ -257,6 +256,43 @@ class EpisodeITunesAddForm(EpisodeAddForm):
         fields = EpisodeAddForm.Meta.fields + EpisodeAddForm.Meta.extra_fields_itunes
 
 
+class PhotoForm(forms.ModelForm):
+    publish = forms.BooleanField(
+        label=_("publish"),
+        required=False,
+        help_text=_("Checking this will publish this photo for use in a gallery, no turning back."),
+    )
+
+    image = forms.ImageField(
+        widget=CustomAdminThumbnailWidget,
+        )
+    class Meta:
+        model = Photo
+        fields = [
+            "image",
+            "caption"]
+
+    def __init__(self, *args, **kwargs):
+        super(PhotoForm, self).__init__(*args, **kwargs)
+        self.fields["publish"].initial = bool(self.instance.published)
+
+class PhotoGalleryForm(forms.ModelForm):
+    publish = forms.BooleanField(
+        label=_("publish"),
+        required=False,
+        help_text=_("Checking this will publish this gallery on the site, no turning back."),
+    )
+
+    class Meta:
+        model = PhotoGallery
+        fields = [
+            "pictures",
+            "submiter",
+            "title"]
+
+    def __init__(self, *args, **kwargs):
+        super(PhotoGalleryForm, self).__init__(*args, **kwargs)
+        self.fields["publish"].initial = bool(self.instance.published)
 
 class AdminShowForm(forms.ModelForm):
 
@@ -299,7 +335,6 @@ class AdminShowForm(forms.ModelForm):
             return
         if self.cleaned_data["publish"]:
             self.instance.published = now()
-
 
 class AdminEpisodeForm(forms.ModelForm):
 
