@@ -64,6 +64,9 @@
     <Compile Include="app\userviews.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="app\utils\azure_utils.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="app\utils\querysetsequence.py">
       <SubType>Code</SubType>
     </Compile>

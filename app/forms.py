@@ -9,13 +9,15 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from app.models import PhotoGallery, Photo
+from app.utils.azure_utils import upload_content
+from django.core.files.images import get_image_dimensions
 
 try:
     from django.utils.timezone import now
 except ImportError:
     from datetime.datetime import now  # noqa
 
-from podcasting.utils.widgets import CustomAdminThumbnailWidget
+#from podcasting.utils.widgets import CustomAdminThumbnailWidget
 
 from app.utils.twitter import can_tweet
 from app.models import Profile, Episode, Show
@@ -77,7 +79,7 @@ class BootstrapAuthenticationForm(AuthenticationForm):
 class BaseShowForm(forms.ModelForm):
 
     original_image = forms.ImageField(
-        widget=CustomAdminThumbnailWidget,
+        #widget=CustomAdminThumbnailWidget,
         help_text=Show._meta.get_field("original_image").help_text)
 
     publish = forms.BooleanField(
@@ -133,7 +135,7 @@ class ShowChangeForm(BaseShowForm):
 class BaseEpisodeForm(forms.ModelForm):
 
     original_image = forms.ImageField(
-        widget=CustomAdminThumbnailWidget,
+        #widget=CustomAdminThumbnailWidget,
         help_text=Episode._meta.get_field("original_image").help_text)
 
     publish = forms.BooleanField(
@@ -257,6 +259,7 @@ class EpisodeITunesAddForm(EpisodeAddForm):
 
 
 class PhotoForm(forms.ModelForm):
+    enctype="multipart/form-data"
     publish = forms.BooleanField(
         label=_("publish"),
         required=False,
@@ -264,7 +267,7 @@ class PhotoForm(forms.ModelForm):
     )
 
     image = forms.ImageField(
-        widget=CustomAdminThumbnailWidget,
+        #widget=CustomAdminThumbnailWidget,
         )
     class Meta:
         model = Photo
@@ -275,6 +278,17 @@ class PhotoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PhotoForm, self).__init__(*args, **kwargs)
         self.fields["publish"].initial = bool(self.instance.published)
+
+    def save(self, commit):
+        image_file = self.cleaned_data['image']
+        photo = super(PhotoForm, self).save(commit=False)
+        photo.url = upload_content(image_file)
+        photo.image_size= image_file.size
+        width, height = get_image_dimensions(image_file)
+        photo.x_dimension = width
+        photo.y_dimension = height
+        photo.save(commit)
+        return photo
 
 class PhotoGalleryForm(forms.ModelForm):
     publish = forms.BooleanField(
@@ -293,6 +307,7 @@ class PhotoGalleryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PhotoGalleryForm, self).__init__(*args, **kwargs)
         self.fields["publish"].initial = bool(self.instance.published)
+
 
 class AdminShowForm(forms.ModelForm):
 
@@ -337,6 +352,10 @@ class AdminShowForm(forms.ModelForm):
             self.instance.published = now()
 
 class AdminEpisodeForm(forms.ModelForm):
+    enctype="multipart/form-data"
+    mp3 = forms.FileField(
+        #widget=CustomAdminThumbnailWidget,
+        help_text=Show._meta.get_field("original_image").help_text)
 
     publish = forms.BooleanField(
         label=_("publish"),
@@ -394,7 +413,8 @@ class AdminEpisodeForm(forms.ModelForm):
         episode = super(AdminEpisodeForm, self).save(commit=False)
         duration = (episode.hours *3600) + (episode.minutes * 60) + episode.seconds
         episode.duration = duration #Point left off
-        episode.size = 0 #TODO JF This is a hack we need to determine the size from URL?
+        episode.url =  upload_content(self.cleaned_data["mp3"])
+        episode.size = self.cleaned_data["mp3"].size
         episode.save()
 
         if can_tweet() and self.cleaned_data["tweet"]:

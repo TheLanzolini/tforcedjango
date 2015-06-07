@@ -703,8 +703,10 @@ class Post(Content):
 #End post
 
 class Photo(models.Model):
+    from model_utils import managers as mum
     published = models.DateTimeField(_("published"), null=True, blank=True, editable=False)
-    link = models.URLField()
+    image_url = models.URLField()
+    image_size = models.PositiveIntegerField()
     caption = models.CharField(
         _("caption"), max_length=255, help_text=_("""
             This will be displayed to the user directly below the photo."""))
